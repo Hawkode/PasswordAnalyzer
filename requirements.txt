@@ -1,0 +1,5 @@
+requests>=2.31
+# Optional but recommended: richer strength scoring (dictionary words,
+# l33t-speak, keyboard walks). The tool runs without it via a built-in
+# fallback heuristic.
+zxcvbn>=4.4.28

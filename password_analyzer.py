@@ -1,115 +1,13 @@
-import hashlib
-import math
-import requests
-import re
-import argparse
+#!/usr/bin/env python3
+"""Backward-compatible entry point.
 
-def calculate_entropy(password):
-    """Calculate the entropy of a given password."""
-    char_sets = [
-        (r'[a-z]', 26),  # Lowercase letters
-        (r'[A-Z]', 26),  # Uppercase letters
-        (r'[0-9]', 10),  # Numbers
-        (r'[\W]', 32)    # Special characters
-    ]
-    
-    pool_size = sum(size for pattern, size in char_sets if re.search(pattern, password))
-    entropy = len(password) * math.log2(pool_size) if pool_size > 0 else 0
-    
-    return round(entropy, 2)
+The project moved from a single script into the ``password_auditor`` package.
+This shim keeps ``python password_analyzer.py ...`` working. Prefer:
 
-def check_pwned(password):
-    """Check if a password is found in HaveIBeenPwned database."""
-    sha1_hash = hashlib.sha1(password.encode()).hexdigest().upper()
-    prefix, suffix = sha1_hash[:5], sha1_hash[5:]
-    
-    url = f"https://api.pwnedpasswords.com/range/{prefix}"
-    response = requests.get(url)
-    
-    return suffix in response.text
+    python -m password_auditor --help
+"""
 
-def save_report(password, length, entropy, pwned):
-    """Save the password analysis report to a file."""
-    with open("password_report.txt", "w") as f:
-        f.write("🔍 Password Security Report 🔍\n")
-        f.write(f"🔹 Password Length: {length}\n")
-        f.write(f"🔹 Entropy: {entropy} bits\n")
-
-        if length < 8:
-            f.write("⚠️ Weak: Password should be at least 8 characters long!\n")
-        elif length < 12:
-            f.write("🟡 Moderate: Consider using 12+ characters.\n")
-        else:
-            f.write("✅ Strong: Good length!\n")
-
-        if entropy < 40:
-            f.write("⚠️ Low Entropy: Password is predictable.\n")
-        elif entropy < 60:
-            f.write("🟡 Medium Entropy: Could be improved.\n")
-        else:
-            f.write("✅ High Entropy: Strong password.\n")
-
-        if pwned:
-            f.write("🚨 WARNING: This password has been leaked! Change it immediately.\n")
-        else:
-            f.write("✅ Safe: This password has not been found in leaks.\n")
-    
-    print("\n📜 Report saved as password_report.txt")
-
-def analyze_password(password):
-    """Analyze password strength and provide recommendations."""
-    length = len(password)
-    entropy = calculate_entropy(password)
-    pwned = check_pwned(password)
-
-    print("\n🔍 Password Analysis Report 🔍")
-    print(f"🔹 Password Length: {length}")
-    print(f"🔹 Entropy: {entropy} bits (Higher is better)")
-    
-    if length < 8:
-        print("⚠️ Weak: Password should be at least 8 characters long!")
-    elif length < 12:
-        print("🟡 Moderate: Consider using 12+ characters.")
-    else:
-        print("✅ Strong: Good length!")
-
-    if entropy < 40:
-        print("⚠️ Low Entropy: Password is predictable.")
-    elif entropy < 60:
-        print("🟡 Medium Entropy: Could be improved.")
-    else:
-        print("✅ High Entropy: Strong password.")
-
-    if pwned:
-        print("🚨 WARNING: This password has been found in leaked databases! Change it immediately.")
-    else:
-        print("✅ Safe: This password has not been found in leaks.")
-
-    # ✅ Fix: Ensure that the function receives 'password' as an argument
-    save_report(password, length, entropy, pwned)
-
-def crack_password(hashfile, wordlist):
-    """Attempt to crack a password hash using John the Ripper."""
-    import subprocess
-
-    # Define the default format as Raw-SHA256 (modify if needed)
-    hash_format = "Raw-SHA256"
-
-    print(f"\n🔑 Attempting to crack hashes from {hashfile} using {wordlist}...\n")
-    
-    # Run John with the correct format
-    cmd = ["john", f"--format={hash_format}", "--wordlist=" + wordlist, hashfile]
-    subprocess.run(cmd)
+from password_auditor.cli import main
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Password Analyzer & Cracker")
-    parser.add_argument("--check", type=str, help="Path to hash file for cracking")
-    parser.add_argument("--wordlist", type=str, help="Path to wordlist for cracking")
-
-    args = parser.parse_args()
-
-    if args.check and args.wordlist:
-        crack_password(args.check, args.wordlist)
-    else:
-        user_password = input("Enter a password to analyze: ")
-        analyze_password(user_password)
+    raise SystemExit(main())

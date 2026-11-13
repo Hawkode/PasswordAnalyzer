@@ -1,0 +1,29 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# Test / tooling
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Audit output — never commit real password reports
+*_report.txt
+password_report.*
+audit-report.*
+
+# Local password lists / test fixtures with real secrets
+test_passwords.txt
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

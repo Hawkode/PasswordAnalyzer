@@ -1,104 +1,108 @@
-# Password Analyzer 🔐
+# Password Auditor
 
-## 📌 Overview
-The **Password Analyzer** is a cybersecurity tool designed to **analyze password security** by checking if a given password hash exists in common wordlists. It helps security professionals and penetration testers evaluate password strength by leveraging **SHA-256 hashing**, **wordlist attacks**, and integration with popular tools like **John the Ripper** and **Hashcat**.
+A command-line password auditor. It rates password strength from three angles
+and prints a clear verdict:
 
-## 🚀 Features
-- **Generate and analyze SHA-256 hashes**
-- **Check passwords against common wordlists** (e.g., RockYou)
-- **Automate password cracking attempts** using John the Ripper & Hashcat
-- **Supports dictionary attacks & brute-force attacks**
-- **Flexible and easy-to-use command-line interface (CLI)**
+- **Entropy** — a charset-pool estimate (a ceiling, not the whole story).
+- **Breach check** — looks the password up in [Have I Been Pwned](https://haveibeenpwned.com/Passwords)
+  using the k-anonymity range API. Only the first 5 characters of the SHA-1
+  hash ever leave your machine; the password itself does not.
+- **Strength rating** — [zxcvbn](https://github.com/dropbox/zxcvbn) when installed
+  (dictionary words, l33t-speak, keyboard walks), with a built-in pattern
+  heuristic as a fallback.
 
-## 🛠 Installation
+This replaces the earlier version, which wrapped `john`/`hashcat`. Cracking is
+out of scope now; this is an auditor. It is pure Python and runs on Windows,
+macOS and Linux — no Kali, no wordlists required.
 
-### 1️⃣ Clone the Repository
+## Install
+
+Python 3.10+.
+
 ```bash
-git clone https://github.com/al3ksmatee/PasswordAnalyzer.git
+git clone https://github.com/Hawkode/PasswordAnalyzer.git
 cd PasswordAnalyzer
-```
-
-### 2️⃣ Install Dependencies
-Ensure you have Python installed (**Python 3.x recommended**). Install required dependencies:
-```bash
 pip install -r requirements.txt
 ```
 
-For Hashcat and John the Ripper, install them if they are not already installed:
-```bash
-# Install John the Ripper (Linux)
-sudo apt install john
+`requests` is the only hard dependency. `zxcvbn` is optional; without it the
+tool uses its fallback scorer and tells you so.
 
-# Install Hashcat (Linux)
-sudo apt install hashcat
+## Usage
+
+Run as a module (recommended) or via the compatibility shim
+`python password_analyzer.py ...`.
+
+**Audit one password (hidden prompt, nothing echoed):**
+
+```bash
+python -m password_auditor
 ```
 
-## 🔍 Usage
-### 1️⃣ Hash a Password
-To generate a SHA-256 hash from a password:
+**Audit one password inline:**
+
 ```bash
-python password_analyzer.py --hash "yourpassword"
+python -m password_auditor --password 'Tr0ub4dour&3'
 ```
 
-### 2️⃣ Crack a Hash Using a Wordlist
-To check if a given hash is found in a wordlist (**RockYou** in this example):
+**Audit a file, one password per line:**
+
 ```bash
-python password_analyzer.py --check hashfile.txt --wordlist /usr/share/wordlists/rockyou.txt
+python -m password_auditor --file passwords.txt
 ```
 
-### 3️⃣ Crack a Hash Using John the Ripper
+**JSON or CSV output, saved to a file:**
+
 ```bash
-john --format=raw-sha256 --wordlist=/usr/share/wordlists/rockyou.txt hashfile.txt
+python -m password_auditor --file passwords.txt --format json --save audit.json
 ```
 
-### 4️⃣ Crack a Hash Using Hashcat
+**Offline (skip the breach lookup):**
+
 ```bash
-hashcat -m 1400 hashfile.txt /usr/share/wordlists/rockyou.txt
+python -m password_auditor --password 'example' --no-breach-check
 ```
 
-### 5️⃣ Brute-force Attack with Hashcat
-If wordlists fail, try brute-force:
+### Options
+
+| Flag | Purpose |
+|------|---------|
+| `--password PW` | Audit a single password. Omit it (and `--file`) for a hidden prompt. |
+| `--file PATH` | Audit every non-blank line of a file. |
+| `--format {text,json,csv}` | Output format. Default `text`. |
+| `--save PATH` | Write the report to a file (set to `0600` on POSIX). |
+| `--no-breach-check` | Skip the HIBP lookup and run fully offline. |
+| `--min-count N` | Flag as compromised only at N breach sightings or more. Default `1`. |
+| `--show-passwords` | Print plaintext instead of masking it. Off by default. |
+
+### Exit codes
+
+Scriptable, so you can gate a pipeline on it:
+
+- `0` — everything audited is FAIR or STRONG and not breached.
+- `1` — at least one password is WEAK or COMPROMISED.
+- `2` — usage or input error.
+
+## Privacy and handling
+
+- The plaintext password never leaves the machine. Only a 5-character SHA-1
+  prefix is sent to HIBP, and the `Add-Padding` header masks the response size.
+- Interactive input uses `getpass`, so the password is not echoed or left in
+  shell history.
+- Reports mask passwords by default and are written owner-only on POSIX.
+  `.gitignore` excludes report files and `test_passwords.txt` so secrets are
+  not committed.
+
+## Testing
+
 ```bash
-hashcat -m 1400 -a 3 hashfile.txt ?a?a?a?a?a?a?a?a
+pip install -r requirements-dev.txt
+pytest
 ```
-This tries **all combinations** of 8-character passwords.
 
-## ⚙️ Configuration
-Modify **password_analyzer.py** to customize:
-- **Hash type** (default: SHA-256)
-- **Wordlist path**
-- **Attack mode** (Dictionary vs. Brute-force)
+The breach-check tests mock the network, so the suite runs offline. See
+[TESTING.md](TESTING.md).
 
-## 🔥 Troubleshooting
-### 🛑 "Command not found" Errors
-Ensure **John the Ripper** or **Hashcat** is installed:
-```bash
-which john  # Should return a path
-which hashcat  # Should return a path
-```
-If missing, install them as mentioned in the **Installation** section.
+## License
 
-### 🛑 Hashcat Fails Due to Outdated Drivers
-Check GPU drivers:
-```bash
-hashcat -I  # List available GPUs
-```
-If the error persists, update your drivers:
-- **NVIDIA**: `sudo apt install nvidia-driver`
-- **AMD**: `sudo apt install amdgpu-pro`
-
-### 🛑 RockYou Wordlist Not Found
-On Kali Linux, the RockYou wordlist is located at:
-```bash
-/usr/share/wordlists/rockyou.txt.gz
-```
-Unzip it if necessary:
-```bash
-gunzip /usr/share/wordlists/rockyou.txt.gz
-```
-## 📜 License
-This project is licensed under the **MIT License**.
-
----
-🚀 **Developed by [al3ksmatee](https://github.com/al3ksmatee)** | 🌍 **Stay safe in cyberspace!**
-
+MIT.
