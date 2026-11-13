@@ -3,17 +3,17 @@
 A command-line password auditor. It rates password strength from three angles
 and prints a clear verdict:
 
-- **Entropy** — a charset-pool estimate (a ceiling, not the whole story).
-- **Breach check** — looks the password up in [Have I Been Pwned](https://haveibeenpwned.com/Passwords)
+- **Entropy**: a charset-pool estimate (a ceiling, not the whole story).
+- **Breach check**: looks the password up in [Have I Been Pwned](https://haveibeenpwned.com/Passwords)
   using the k-anonymity range API. Only the first 5 characters of the SHA-1
   hash ever leave your machine; the password itself does not.
-- **Strength rating** — [zxcvbn](https://github.com/dropbox/zxcvbn) when installed
+- **Strength rating**: [zxcvbn](https://github.com/dropbox/zxcvbn) when installed
   (dictionary words, l33t-speak, keyboard walks), with a built-in pattern
   heuristic as a fallback.
 
 This replaces the earlier version, which wrapped `john`/`hashcat`. Cracking is
 out of scope now; this is an auditor. It is pure Python and runs on Windows,
-macOS and Linux — no Kali, no wordlists required.
+macOS and Linux, no Kali or wordlists required.
 
 ## Install
 
@@ -79,9 +79,9 @@ python -m password_auditor --password 'example' --no-breach-check
 
 Scriptable, so you can gate a pipeline on it:
 
-- `0` — everything audited is FAIR or STRONG and not breached.
-- `1` — at least one password is WEAK or COMPROMISED.
-- `2` — usage or input error.
+- `0`: everything audited is FAIR or STRONG and not breached.
+- `1`: at least one password is WEAK or COMPROMISED.
+- `2`: usage or input error.
 
 ## Privacy and handling
 

@@ -15,7 +15,7 @@ def _sample():
             verdict=Verdict.COMPROMISED,
             breach_count=12345,
             breach_checked=True,
-            findings=["Seen 12,345 times in breach corpora — do not use."],
+            findings=["Seen 12,345 times in breach corpora; do not use."],
         )
     ]
 

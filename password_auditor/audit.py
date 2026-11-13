@@ -81,7 +81,7 @@ def audit_password(
     if breach_count is not None and breach_count >= min_count:
         verdict = Verdict.COMPROMISED
         findings = [
-            f"Seen {breach_count:,} times in breach corpora — do not use.",
+            f"Seen {breach_count:,} times in breach corpora; do not use.",
             *findings,
         ]
     else:

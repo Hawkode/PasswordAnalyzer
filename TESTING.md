@@ -1,6 +1,6 @@
 # Testing
 
-The suite is pytest-based and runs fully offline — the HIBP client is mocked,
+The suite is pytest-based and runs fully offline; the HIBP client is mocked,
 so no real network calls are made.
 
 ## Run the tests
