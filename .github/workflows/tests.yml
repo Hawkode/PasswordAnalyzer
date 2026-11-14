@@ -1,0 +1,37 @@
+name: tests
+on: [push, pull_request]
+
+# The job only reads the code. Keep the workflow token read-only.
+permissions:
+  contents: read
+
+jobs:
+  pytest:
+    runs-on: ubuntu-latest
+    # A healthy run takes under a minute. Stop a hung run instead of waiting for the 6-hour default.
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        # Oldest supported (README says 3.10+) and the current release.
+        python-version: ['3.10', '3.13']
+        # "full" installs zxcvbn; "fallback" leaves it out to test the built-in heuristic.
+        deps: [full, fallback]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies (${{ matrix.deps }})
+        run: |
+          python -m pip install --upgrade pip
+          if [ "${{ matrix.deps }}" = "full" ]; then
+            pip install -r requirements-dev.txt
+          else
+            pip install "requests>=2.31" "pytest>=8.0"
+          fi
+      - name: Run pytest
+        # The breach-check tests mock the network, so nothing leaves the runner.
+        run: python -m pytest -v

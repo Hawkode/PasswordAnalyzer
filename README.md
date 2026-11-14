@@ -1,5 +1,7 @@
 # Password Auditor
 
+[![tests](https://github.com/Hawkode/PasswordAnalyzer/actions/workflows/tests.yml/badge.svg)](https://github.com/Hawkode/PasswordAnalyzer/actions/workflows/tests.yml)
+
 A command-line password auditor. It rates password strength from three angles
 and prints a clear verdict:
 
@@ -100,7 +102,8 @@ pip install -r requirements-dev.txt
 pytest
 ```
 
-The breach-check tests mock the network, so the suite runs offline. See
+The breach-check tests mock the network, so the suite runs offline. CI runs it on
+Python 3.10 and 3.13, with and without zxcvbn, on every push. See
 [TESTING.md](TESTING.md).
 
 ## License
